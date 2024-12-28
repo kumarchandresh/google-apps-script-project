@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    // https://compat-table.github.io/compat-table/es2016plus/
+    "lib": ["ES2024"],
+    "target": "ES2016",
+    "module": "None",
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "build",
+    "strict": true,
+    "skipLibCheck": true,
+  },
+}
