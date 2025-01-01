@@ -6,6 +6,7 @@ declare global {
   const validator: typeof import("validator")
   const Zod: typeof import("node_modules/zod/lib/index")
   const z: typeof Zod.z
+  const callsites: typeof import("node_modules/callsites/index").default
 }
 
 export { }

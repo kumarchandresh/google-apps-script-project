@@ -11,6 +11,7 @@
 | [Luxon](https://moment.github.io/luxon)                     | MIT     |   3.5.0 |      69 KB |
 | [validator.js](https://github.com/validatorjs/validator.js) | MIT     | 13.12.0 |     121 KB |
 | [Zod](https://zod.dev/)                                     | MIT     |  3.24.1 |      61 KB |
+| [callsites](https://www.npmjs.com/callsites)                | MIT     |   4.2.0 |       0 KB |
 | **Total**                                                   |         |         | **377 KB** |
 
 ## How-to?

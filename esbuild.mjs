@@ -45,4 +45,10 @@ await Promise.all([
     globalName: "Zod",
     footer: { js: ";var z=Zod.z" },
   })),
+  build(withDefaults({
+    entryPoints: ["callsites"],
+    outfile: __lib__("callsites.bundle.js"),
+    globalName: "callsites",
+    footer: { js: ";callsites=callsites.default" },
+  })),
 ])
