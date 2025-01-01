@@ -2,6 +2,13 @@
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 
+## Libraries
+
+| Library                      | License | Version |      Size |
+| :--------------------------- | :------ | ------: | --------: |
+| [Lodash](https://lodash.com) | MIT     | 4.17.21 |     72 KB |
+| **Total**                    |         |         | **72 KB** |
+
 ## How-to?
 
 - Replace _`{{GOOGLE_APP_SCRIPT_ID}}`_ in `.clasp.json` file.

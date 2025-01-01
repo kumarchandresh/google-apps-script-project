@@ -1,9 +1,9 @@
 function myFunction() {
   for (const i of range(2)) {
     if (i) {
-      throw new Error("Goodbye, world.")
+      throw new Error(_.upperCase("Goodbye, world."))
     }
-    Logger.log("Hello, world.")
+    Logger.log(_.upperCase("Hello, world."))
   }
 }
 

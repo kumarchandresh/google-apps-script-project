@@ -1,18 +1,12 @@
+import { exec } from "child_process"
 import fs from "fs"
-import path from "path"
-import { URL } from "url"
 import gulp from "gulp"
 import eslint from "gulp-eslint-new"
-import typescript from "gulp-typescript"
 import prettier from "gulp-prettier"
+import typescript from "gulp-typescript"
+import path from "path"
 
-const buildDir = path.join(path.dirname(new URL(import.meta.url).pathname), "build")
-
-export function clean(cb) {
-  fs.rm(buildDir, { recursive: true, force: true }, cb)
-}
-
-export function lint() {
+export function checkStyle() {
   return gulp.src([
     "src/**/*.ts", // source files
     "*.mjs",       // config files
@@ -22,11 +16,26 @@ export function lint() {
     .pipe(eslint.failAfterError())
 }
 
-export function transpile() {
+export function checkTypes() {
   return gulp.src("src/**/*.ts")
     .pipe(typescript.createProject("tsconfig.json")())
     .pipe(prettier())
     .pipe(gulp.dest("build"))
+}
+
+export function lint(done) {
+  return gulp.series(checkStyle, checkTypes)(done)
+}
+
+export function clean(cb) {
+  fs.rm(path.join(import.meta.dirname, "build"), {
+    recursive: true,
+    force: true,
+  }, cb)
+}
+
+export function esbuild(cb) {
+  exec("node esbuild.mjs", cb)
 }
 
 export function restore() {
@@ -34,9 +43,8 @@ export function restore() {
     .pipe(gulp.dest("build"))
 }
 
-export default gulp.series(
-  lint,
-  clean,
-  transpile,
-  restore,
-)
+export function build(done) {
+  return gulp.series(lint, clean, esbuild, restore)(done)
+}
+
+export default build

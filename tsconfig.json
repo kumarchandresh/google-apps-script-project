@@ -6,7 +6,7 @@
     "module": "None",
     "baseUrl": ".",
     "rootDir": "src",
-    "outDir": "build",
+    "noEmit": true,
     "strict": true,
     "skipLibCheck": true,
   },
