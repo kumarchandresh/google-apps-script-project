@@ -1,6 +1,6 @@
 function myFunction() {
-  Logger.log("Starting at: " + DateTime.now().toISO())
-  Logger.log("locale: en-US: " + validator.isLocale("en-US"))
+  logger.log("Starting at: " + DateTime.now().toISO())
+  logger.log("locale: en-US: " + validator.isLocale("en-US"))
   const greet = R.replace("{name}", R.__, "Hello, {name}.")
   const getName = R.prop("name")
   const data = { name: "world" }
@@ -9,13 +9,23 @@ function myFunction() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const person = { name: "John Doe" } as any
   person.self = person
-  Logger.log(Flatted.stringify(person))
+  logger.log(Flatted.stringify(person))
+  logger.error(stringify(Flatted.parse(Flatted.stringify(person))))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const arr = [] as any[]
+  arr[0] = arr
+  arr[1] = person
+  person.src = arr
+  logger.log(stringify(arr))
   for (const i of range(2)) {
     if (i) {
-      throw new Error(_.upperCase("Goodbye, world."))
+      logger.error(_.upperCase("Goodbye, world."))
     }
-    Logger.log(greet(getName(data)))
+    else {
+      logger.log(greet(getName(data)))
+    }
   }
+  logger.flush()
 }
 
 function* range(min: number, max?: number, step = 1) {
