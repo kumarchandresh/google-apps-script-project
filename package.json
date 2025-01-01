@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "callsites": "^4.2.0",
+    "flatted": "^3.3.2",
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
     "ramda": "^0.30.1",

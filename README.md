@@ -12,7 +12,8 @@
 | [validator.js](https://github.com/validatorjs/validator.js) | MIT     | 13.12.0 |     121 KB |
 | [Zod](https://zod.dev/)                                     | MIT     |  3.24.1 |      61 KB |
 | [callsites](https://www.npmjs.com/callsites)                | MIT     |   4.2.0 |       0 KB |
-| **Total**                                                   |         |         | **377 KB** |
+| [flatted](https://npmjs.com/flatted)                        | ISC     |   3.3.2 |       2 KB |
+| **Total**                                                   |         |         | **379 KB** |
 
 ## How-to?
 

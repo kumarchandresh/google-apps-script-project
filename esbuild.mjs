@@ -51,4 +51,9 @@ await Promise.all([
     globalName: "callsites",
     footer: { js: ";callsites=callsites.default" },
   })),
+  build(withDefaults({
+    entryPoints: ["flatted"],
+    outfile: __lib__("flatted.bundle.js"),
+    globalName: "Flatted",
+  })),
 ])

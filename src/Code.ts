@@ -6,6 +6,10 @@ function myFunction() {
   const data = { name: "world" }
   Logger.log(z.string().safeParse(1))
   Logger.log([callsites()[0].getFileName(), callsites()[0].getLineNumber()].join(":"))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const person = { name: "John Doe" } as any
+  person.self = person
+  Logger.log(Flatted.stringify(person))
   for (const i of range(2)) {
     if (i) {
       throw new Error(_.upperCase("Goodbye, world."))

@@ -7,6 +7,7 @@ declare global {
   const Zod: typeof import("node_modules/zod/lib/index")
   const z: typeof Zod.z
   const callsites: typeof import("node_modules/callsites/index").default
+  const Flatted: typeof import("node_modules/flatted/types/index")
 }
 
 export { }
