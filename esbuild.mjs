@@ -28,4 +28,10 @@ await Promise.all([
     outfile: __lib__("ramda.bundle.js"),
     globalName: "R",
   })),
+  build(withDefaults({
+    entryPoints: ["luxon"],
+    outfile: __lib__("luxon.bundle.js"),
+    globalName: "luxon",
+    footer: { js: ";var DateTime=luxon.DateTime" },
+  })),
 ])

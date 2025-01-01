@@ -1,10 +1,13 @@
 function myFunction() {
+  Logger.log("Starting at: " + DateTime.now().toISO())
   const greet = R.replace("{name}", R.__, "Hello, {name}.")
+  const getName = R.prop("name")
+  const data = { name: "world" }
   for (const i of range(2)) {
     if (i) {
       throw new Error(_.upperCase("Goodbye, world."))
     }
-    Logger.log(greet("world"))
+    Logger.log(greet(getName(data)))
   }
 }
 
