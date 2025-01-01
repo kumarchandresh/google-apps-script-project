@@ -4,10 +4,11 @@
 
 ## Libraries
 
-| Library                      | License | Version |      Size |
-| :--------------------------- | :------ | ------: | --------: |
-| [Lodash](https://lodash.com) | MIT     | 4.17.21 |     72 KB |
-| **Total**                    |         |         | **72 KB** |
+| Library                      | License | Version |       Size |
+| :--------------------------- | :------ | ------: | ---------: |
+| [Lodash](https://lodash.com) | MIT     | 4.17.21 |      71 KB |
+| [Ramda](https://ramdajs.com) | MIT     |  0.30.1 |      57 KB |
+| **Total**                    |         |         | **127 KB** |
 
 ## How-to?
 

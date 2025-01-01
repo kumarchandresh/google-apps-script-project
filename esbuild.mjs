@@ -2,13 +2,14 @@ import { build } from "esbuild"
 import * as glob from "glob"
 import _ from "lodash"
 import { join } from "path"
+import * as R from "ramda"
 
-const libDir = "build/__lib__"
-const bundleConfig = {
+const __lib__ = R.curryN(2, join)("build/__lib__")
+const withDefaults = R.mergeRight({
   format: "iife",
   bundle: true,
   minify: true,
-}
+})
 
 await Promise.all([
   build({
@@ -17,9 +18,14 @@ await Promise.all([
     outdir: "build",
     target: "ES2016",
   }),
-  build(_.merge({
+  build(withDefaults({
     entryPoints: ["lodash"],
-    outfile: join(libDir, "lodash.bundle.js"),
+    outfile: __lib__("lodash.bundle.js"),
     globalName: "_",
-  }, bundleConfig)),
+  })),
+  build(withDefaults({
+    entryPoints: ["ramda"],
+    outfile: __lib__("ramda.bundle.js"),
+    globalName: "R",
+  })),
 ])

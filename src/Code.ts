@@ -1,9 +1,10 @@
 function myFunction() {
+  const greet = R.replace("{name}", R.__, "Hello, {name}.")
   for (const i of range(2)) {
     if (i) {
       throw new Error(_.upperCase("Goodbye, world."))
     }
-    Logger.log(_.upperCase("Hello, world."))
+    Logger.log(greet("world"))
   }
 }
 
