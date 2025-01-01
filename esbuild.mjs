@@ -56,4 +56,14 @@ await Promise.all([
     outfile: __lib__("flatted.bundle.js"),
     globalName: "Flatted",
   })),
+  build(withDefaults({
+    entryPoints: ["htmlparser2"],
+    outfile: __lib__("htmlparser2.bundle.js"),
+    globalName: "htmlparser2",
+  })),
+  build(withDefaults({
+    entryPoints: ["css-select"],
+    outfile: __lib__("css-select.bundle.js"),
+    globalName: "cssSelect",
+  })),
 ])

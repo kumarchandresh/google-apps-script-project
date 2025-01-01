@@ -8,6 +8,8 @@ declare global {
   const z: typeof Zod.z
   const callsites: typeof import("node_modules/callsites/index").default
   const Flatted: typeof import("node_modules/flatted/types/index")
+  const htmlparser2: typeof import("node_modules/htmlparser2/dist/esm/index")
+  const cssSelect: typeof import("node_modules/css-select/lib/index")
 }
 
 export { }

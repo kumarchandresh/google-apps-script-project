@@ -25,6 +25,36 @@ function myFunction() {
       logger.log(greet(getName(data)))
     }
   }
+  const html = `
+  <html>
+    <body>
+      <a href="https://example.com">Example Link</a>
+      <table>
+        <tr>
+          <td>Cell 1</td>
+          <td>Cell 2</td>
+        </tr>
+      </table>
+    </body>
+  </html>
+`
+
+  // Parse the HTML into a DOM-like structure
+  const document = htmlparser2.parseDocument(html)
+
+  // Select elements using CSS selectors
+  const link = cssSelect.selectOne("a", document) // Select the first <a> element
+  const tableCells = cssSelect.selectAll("table td", document) // Select all <td> elements in the <table>
+
+  // Access properties of the selected elements
+  if (link) {
+    console.log("Link text:", link.children[0].data) // Example Link
+    console.log("Link href:", link.attribs.href) // https://example.com
+  }
+
+  tableCells.forEach((cell, index) => {
+    console.log(`Cell ${index + 1}:`, cell.children[0].data) // Cell 1, Cell 2
+  })
   logger.flush()
 }
 
