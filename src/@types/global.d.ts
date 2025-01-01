@@ -3,6 +3,7 @@ declare global {
   const R: typeof import("node_modules/types-ramda/es/index")
   const luxon: typeof import("luxon")
   const DateTime: typeof luxon.DateTime
+  const validator: typeof import("validator")
 }
 
 export { }

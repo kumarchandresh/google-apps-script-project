@@ -4,12 +4,13 @@
 
 ## Libraries
 
-| Library                                 | License | Version |       Size |
-| :-------------------------------------- | :------ | ------: | ---------: |
-| [Lodash](https://lodash.com)            | MIT     | 4.17.21 |      71 KB |
-| [Ramda](https://ramdajs.com)            | MIT     |  0.30.1 |      57 KB |
-| [Luxon](https://moment.github.io/luxon) | MIT     |   3.5.0 |      69 KB |
-| **Total**                               |         |         | **196 KB** |
+| Library                                                     | License | Version |       Size |
+| :---------------------------------------------------------- | :------ | ------: | ---------: |
+| [Lodash](https://lodash.com)                                | MIT     | 4.17.21 |      71 KB |
+| [Ramda](https://ramdajs.com)                                | MIT     |  0.30.1 |      57 KB |
+| [Luxon](https://moment.github.io/luxon)                     | MIT     |   3.5.0 |      69 KB |
+| [validator.js](https://github.com/validatorjs/validator.js) | MIT     | 13.12.0 |     121 KB |
+| **Total**                                                   |         |         | **316 KB** |
 
 ## How-to?
 

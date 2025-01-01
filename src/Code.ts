@@ -1,5 +1,6 @@
 function myFunction() {
   Logger.log("Starting at: " + DateTime.now().toISO())
+  Logger.log("locale: en-US: " + validator.isLocale("en-US"))
   const greet = R.replace("{name}", R.__, "Hello, {name}.")
   const getName = R.prop("name")
   const data = { name: "world" }

@@ -34,4 +34,9 @@ await Promise.all([
     globalName: "luxon",
     footer: { js: ";var DateTime=luxon.DateTime" },
   })),
+  build(withDefaults({
+    entryPoints: ["validator"],
+    outfile: __lib__("validator.bundle.js"),
+    globalName: "validator",
+  })),
 ])
