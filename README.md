@@ -10,7 +10,8 @@
 | [Ramda](https://ramdajs.com)                                | MIT     |  0.30.1 |      57 KB |
 | [Luxon](https://moment.github.io/luxon)                     | MIT     |   3.5.0 |      69 KB |
 | [validator.js](https://github.com/validatorjs/validator.js) | MIT     | 13.12.0 |     121 KB |
-| **Total**                                                   |         |         | **316 KB** |
+| [Zod](https://zod.dev/)                                     | MIT     |  3.24.1 |      61 KB |
+| **Total**                                                   |         |         | **377 KB** |
 
 ## How-to?
 

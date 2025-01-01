@@ -4,6 +4,7 @@ function myFunction() {
   const greet = R.replace("{name}", R.__, "Hello, {name}.")
   const getName = R.prop("name")
   const data = { name: "world" }
+  Logger.log(z.string().safeParse(1))
   for (const i of range(2)) {
     if (i) {
       throw new Error(_.upperCase("Goodbye, world."))

@@ -39,4 +39,10 @@ await Promise.all([
     outfile: __lib__("validator.bundle.js"),
     globalName: "validator",
   })),
+  build(withDefaults({
+    entryPoints: ["zod"],
+    outfile: __lib__("zod.bundle.js"),
+    globalName: "Zod",
+    footer: { js: ";var z=Zod.z" },
+  })),
 ])
