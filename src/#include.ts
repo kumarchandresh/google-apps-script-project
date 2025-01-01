@@ -1,16 +1,17 @@
 /**
- * @fileOverview
+ * @fileoverview
+ *
+ * .env
  *
  * Customize the execution environment here. Scripts are executed in order they
  * are shown in the Google apps script environment.
  *
- * __lib__/lodash.js
- * @framework/logger.js
- * #include.js
- * myFile.js
+ * _bundles/lodash.bundle.gs
+ * _lib/logger.gs
+ * #include.gs
+ * Code.gs
  */
 
 const logger = LogManager.getLogger({
-  useStackDriver: true,
-  useSpreadSheet: true,
+  useSpreadsheet: true,
 })

@@ -4,7 +4,7 @@ import _ from "lodash"
 import { join } from "path"
 import * as R from "ramda"
 
-const __lib__ = R.curryN(2, join)("build/__lib__")
+const _bundles = R.curryN(2, join)("build/_bundles")
 const withDefaults = R.mergeRight({
   format: "iife",
   bundle: true,
@@ -20,50 +20,55 @@ await Promise.all([
   }),
   build(withDefaults({
     entryPoints: ["lodash"],
-    outfile: __lib__("lodash.bundle.js"),
+    outfile: _bundles("lodash.bundle.js"),
     globalName: "_",
   })),
   build(withDefaults({
     entryPoints: ["ramda"],
-    outfile: __lib__("ramda.bundle.js"),
+    outfile: _bundles("ramda.bundle.js"),
     globalName: "R",
   })),
   build(withDefaults({
     entryPoints: ["luxon"],
-    outfile: __lib__("luxon.bundle.js"),
+    outfile: _bundles("luxon.bundle.js"),
     globalName: "luxon",
     footer: { js: ";var DateTime=luxon.DateTime" },
   })),
   build(withDefaults({
     entryPoints: ["validator"],
-    outfile: __lib__("validator.bundle.js"),
+    outfile: _bundles("validator.bundle.js"),
     globalName: "validator",
   })),
   build(withDefaults({
     entryPoints: ["zod"],
-    outfile: __lib__("zod.bundle.js"),
+    outfile: _bundles("zod.bundle.js"),
     globalName: "Zod",
     footer: { js: ";var z=Zod.z" },
   })),
   build(withDefaults({
     entryPoints: ["callsites"],
-    outfile: __lib__("callsites.bundle.js"),
+    outfile: _bundles("callsites.bundle.js"),
     globalName: "callsites",
     footer: { js: ";callsites=callsites.default" },
   })),
   build(withDefaults({
     entryPoints: ["flatted"],
-    outfile: __lib__("flatted.bundle.js"),
+    outfile: _bundles("flatted.bundle.js"),
     globalName: "Flatted",
   })),
   build(withDefaults({
     entryPoints: ["htmlparser2"],
-    outfile: __lib__("htmlparser2.bundle.js"),
+    outfile: _bundles("htmlparser2.bundle.js"),
     globalName: "htmlparser2",
   })),
   build(withDefaults({
     entryPoints: ["css-select"],
-    outfile: __lib__("css-select.bundle.js"),
+    outfile: _bundles("css-select.bundle.js"),
     globalName: "cssSelect",
+  })),
+  build(withDefaults({
+    entryPoints: ["ms"],
+    outfile: _bundles("ms.bundle.js"),
+    globalName: "ms",
   })),
 ])

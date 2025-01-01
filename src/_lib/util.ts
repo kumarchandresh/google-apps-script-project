@@ -2,7 +2,7 @@
  * Quote string depending on which quotes are used within the string. Good for
  * readable logs.
  */
-function quoteString(str: string) {
+function _quoteString(str: string) {
   if (str.includes('"') && str.includes("'") && str.includes("`")) {
     return `"${str.replace(/"/g, '\\"').replace(/'/g, "\\'").replace(/`/g, "\\`")}"`
   }
@@ -22,12 +22,12 @@ function quoteString(str: string) {
  * NOTE: Result is not necessarily parsable, use JSON.stringify for that, or
  * Flatted.stringify if the object contains circular references.
  */
-function stringify<T>(any: T): string {
+function _stringify<T>(any: T): string {
   let counter = 0
   const refs = new Map()
-  return (function _stringify<_T>(any: _T): string {
+  return (function __stringify<_T>(any: _T): string {
     if (_.isString(any)) {
-      return quoteString(any)
+      return _quoteString(any)
     }
     else if (_.isNumber(any)) {
       return _.toString(any) // Lodash preserves "-0"
@@ -43,14 +43,14 @@ function stringify<T>(any: T): string {
           }
           return `[Circular *${count}]`
         }
-        return _stringify(it)
+        return __stringify(it)
       }).join(",") + "]"
     }
     else if (any instanceof Error) {
       const name = any.name ?? any.constructor.name ?? "Error"
       const message = any.message ?? ""
       const stack = any.stack ?? ""
-      return _stringify({ name, message, stack: stack.split(/\r?\n/) })
+      return __stringify({ ...any, name, message, stack: _clearerStack(stack) })
     }
     else if (any && typeof any == "object") {
       refs.set(any, 0)
@@ -61,9 +61,9 @@ function stringify<T>(any: T): string {
             count = ++counter
             refs.set(value, counter)
           }
-          return `${quoteString(key)}:[Circular *${count}]`
+          return `${_quoteString(key)}:[Circular *${count}]`
         }
-        return `${quoteString(key)}:${_stringify(value)}`
+        return `${_quoteString(key)}:${__stringify(value)}`
       }).join(",") + "}"
     }
     else {
@@ -72,25 +72,33 @@ function stringify<T>(any: T): string {
   })(any)
 }
 
+function _clearerStack(stacktrace: string) {
+  return stacktrace.split("\n").filter((ln) => {
+    return !ln.includes("__GS_INTERNAL")                       // at __GS_INTERNAL_top_function_call__.gs:1:8
+      && !ln.match(/at Command_?.(run|runnable|on\w+)/)        // at Command_.run (_lib/command:22:27)
+      && !ln.match(/at Command_?.*\[as (runnable|callback)]/)  // at Command.myFunction [as callback] (_lib/command:82:83)
+  }).join("\n")
+}
+
 /**
  * Convert everything into strings.
  */
-function toString<T>(any: T) {
+function _toString<T>(any: T) {
   if (_.isString(any)) {
     return any
   }
   else if (_.isError(any)) {
-    return any.stack || any.toString()
+    return any.stack ? _clearerStack(any.stack) : any.toString()
   }
   else {
-    return stringify(any)
+    return _stringify(any)
   }
 }
 
 /**
  * Check if an object has circular references.
 */
-function isCyclic<T>(object: T) {
+function _isCyclic<T>(object: T) {
   const refs = new WeakSet()
   return (function detect<_T>(obj: _T) {
     if (obj && typeof obj == "object") {
@@ -106,4 +114,27 @@ function isCyclic<T>(object: T) {
     }
     return false
   })(object)
+}
+
+/**
+ * Gets the `Ui` object for if the script is bound, `null` otherwise.
+ */
+function _getUi() {
+  try {
+    return SpreadsheetApp.getUi()
+  }
+  catch (e) { /* silence */ }
+  try {
+    return DocumentApp.getUi()
+  }
+  catch (e) { /* silence */ }
+  try {
+    return SlidesApp.getUi()
+  }
+  catch (e) { /* silence */ }
+  try {
+    return FormApp.getUi()
+  }
+  catch (e) { /* silence */ }
+  return null
 }
