@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "name": "google-apps-script-project",
+  "description": "Google Apps Script project",
+  "version": "0.0.0",
+  "license": "MIT",
+  "author": "Kumar Chandresh",
+  "scripts": {
+    "build": "gulp build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@stylistic/eslint-plugin": "^2.12.1",
+    "@types/google-apps-script": "^1.0.91",
+    "cspell": "^8.17.1",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.17.0",
+    "glob": "^11.0.0",
+    "gulp": "^5.0.0",
+    "gulp-eslint-new": "^2.4.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "json5": "^2.2.3",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0"
+  }
+}
