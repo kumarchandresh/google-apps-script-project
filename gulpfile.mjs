@@ -5,13 +5,17 @@ import gulp from "gulp"
 import eslint from "gulp-eslint-new"
 import typescript from "gulp-typescript"
 
-export function spellCheck() {
+export function spellCheck(done) {
   return cspell.lint(["src/**/*.ts", "*.mjs"], {
     progress: true,
     issues: true,
     relative: true,
     showContext: true,
-  })
+  }).catch(done)
+    .then((result) => {
+      if (result.errors) done(`${result.errors} errors`)
+      if (result.issues) done(`${result.issues} issues`)
+    })
 }
 
 export function codeCheck() {
@@ -25,7 +29,6 @@ export function codeCheck() {
 export function typeCheck() {
   return gulp.src("src/**/*.ts")
     .pipe(typescript.createProject("tsconfig.json")())
-    .pipe(gulp.dest("build"))
 }
 
 export function lint(done) {
