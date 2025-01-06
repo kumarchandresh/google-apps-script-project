@@ -1,9 +1,13 @@
-import childProcess from "child_process"
-import * as cspell from "cspell"
-import fs from "fs"
-import gulp from "gulp"
-import eslint from "gulp-eslint-new"
-import typescript from "gulp-typescript"
+import childProcess from "child_process";
+import * as cspell from "cspell";
+import fs from "fs";
+import * as glob from "glob";
+import gulp from "gulp";
+import esbuild from "gulp-esbuild";
+import eslint from "gulp-eslint-new";
+import prettier from "gulp-prettier";
+import typescript from "gulp-typescript";
+import JSON5 from "json5";
 
 export function spellCheck(done) {
   return cspell.lint(["src/**/*.ts", "*.mjs"], {
@@ -11,11 +15,10 @@ export function spellCheck(done) {
     issues: true,
     relative: true,
     showContext: true,
-  }).catch(done)
-    .then((result) => {
-      if (result.errors) done(`${result.errors} errors`)
-      if (result.issues) done(`${result.issues} issues`)
-    })
+  }).then((result) => {
+    if (result.errors) done(`${result.errors} errors`);
+    if (result.issues) done(`${result.issues} issues`);
+  });
 }
 
 export function codeCheck() {
@@ -23,31 +26,44 @@ export function codeCheck() {
     .pipe(eslint({ fix: true }))
     .pipe(eslint.fix())
     .pipe(eslint.format())
-    .pipe(eslint.failAfterError())
+    .pipe(eslint.failAfterError());
 }
 
 export function typeCheck() {
   return gulp.src("src/**/*.ts")
-    .pipe(typescript.createProject("tsconfig.json")())
+    .pipe(typescript.createProject("tsconfig.json")());
 }
 
 export function lint(done) {
-  return gulp.series(spellCheck, codeCheck, typeCheck)(done)
+  return gulp.series(spellCheck, codeCheck, typeCheck)(done);
 }
 
-export function clean(done) {
-  fs.rm("build", { recursive: true, force: true }, done)
+export function clean() {
+  return fs.promises.rm("build", { recursive: true, force: true });
 }
 
-export function esbuild(done) {
-  childProcess.spawn("node", ["esbuild.mjs"], { stdio: "inherit" }).on("close", done)
+export async function compile() {
+  const buffer = await fs.promises.readFile("tsconfig.json");
+  const tsconfig = await JSON5.parse(buffer.toString());
+  return gulp.src(glob.globSync("src/**/*.ts").filter(f => !f.endsWith(".d.ts")))
+    .pipe(esbuild({ target: tsconfig.compilerOptions.target }))
+    .pipe(prettier({ printWidth: 120 }))
+    .pipe(gulp.dest("build"));
+}
+
+export function bundle(done) {
+  childProcess.spawn("node", ["esbuild.mjs"], { stdio: "inherit" }).on("close", done);
 }
 
 export function restore() {
   return gulp.src("appsscript.json")
-    .pipe(gulp.dest("build"))
+    .pipe(gulp.dest("build"));
 }
 
 export function build(done) {
-  return gulp.series(lint, clean, esbuild, restore)(done)
+  return gulp.series(clean, compile, bundle, restore)(done);
+}
+
+export default function (done) {
+  gulp.series(lint, build)(done);
 }

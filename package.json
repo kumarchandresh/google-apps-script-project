@@ -14,6 +14,7 @@
     "@types/google-apps-script": "^1.0.91",
     "@types/lodash": "^4.17.14",
     "@types/luxon": "^3.4.2",
+    "@types/ms": "^0.7.34",
     "@types/ramda": "^0.30.2",
     "@types/validator": "^13.12.2",
     "cspell": "^8.17.1",
@@ -21,19 +22,25 @@
     "eslint": "^9.17.0",
     "glob": "^11.0.0",
     "gulp": "^5.0.0",
+    "gulp-esbuild": "^0.14.0",
     "gulp-eslint-new": "^2.4.0",
+    "gulp-prettier": "^6.0.0",
     "gulp-typescript": "^6.0.0-alpha.1",
     "json5": "^2.2.3",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.0"
   },
   "dependencies": {
+    "callsites": "^4.2.0",
     "css-select": "^5.1.0",
     "flatted": "^3.3.2",
     "htmlparser2": "^10.0.0",
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
+    "ms": "^2.1.3",
+    "process": "^0.11.10",
     "ramda": "^0.30.1",
+    "util": "^0.12.5",
     "validator": "^13.12.0",
     "zod": "^3.24.1"
   }

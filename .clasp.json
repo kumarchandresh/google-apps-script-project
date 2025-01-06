@@ -1,4 +1,23 @@
 {
   "rootDir": "build",
+  "filePushOrder": [
+    "build/__lib__/lodash.min.js",
+    "build/__lib__/lodash-fp.min.js",
+    "build/__lib__/ramda.min.js",
+    "build/__lib__/luxon.min.js",
+    "build/__lib__/validator.min.js",
+    "build/__lib__/zod.min.js",
+    "build/__lib__/htmlparser2.min.js",
+    "build/__lib__/css-select.min.js",
+    "build/__lib__/flatted.min.js",
+    "build/__lib__/callsites.min.js",
+    "build/__lib__/process.min.js",
+    "build/__lib__/util.min.js",
+    "build/__lib__/ms.min.js",
+    "build/__lib__/clock.js",
+    "build/__lib__/logger.js",
+    "build/__lib__/command.js",
+    "build/#include.js"
+  ],
   "scriptId": "__________________google-apps-script-id__________________"
 }

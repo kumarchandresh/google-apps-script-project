@@ -1,81 +1,129 @@
-import esbuild from "esbuild"
-import fs from "fs"
-import * as glob from "glob"
-import JSON5 from "json5"
-import _ from "lodash"
-import path from "path"
+import esbuild from "esbuild";
+import fs from "fs";
+import path from "path";
 
+const libDir = path.join("build", "__lib__");
+
+/** @type {((prefix:string) => void)[]} */
 await Promise.all([
-  fs.promises.readFile("tsconfig.json").then((buffer) => {
-    const tsconfig = JSON5.parse(buffer.toString())
-    return esbuild.build({
-      entryPoints: glob.globSync("src/**/*.ts").filter(f => !f.endsWith(".d.ts")),
-      target: tsconfig.compilerOptions.target,
-      outdir: tsconfig.compilerOptions.outDir,
-    })
-  }),
-  esbuild.build(bundle({
-    entryPoints: ["lodash"],
+  // lodash
+  esbuild.build(withDefaults({
     globalName: "_",
+    entryPoints: ["lodash"],
+    outfile: path.join(libDir, "lodash.min.js"),
     banner: { js: getLicense("lodash/LICENSE") },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["lodash/fp"],
+  // lodash-fp
+  esbuild.build(withDefaults({
     globalName: "fp",
+    entryPoints: ["lodash/fp"],
+    outfile: path.join(libDir, "lodash-fp.min.js"),
     banner: { js: getLicense("lodash/LICENSE") },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["ramda"],
+  // ramda
+  esbuild.build(withDefaults({
     globalName: "R",
+    entryPoints: ["ramda"],
+    outfile: path.join(libDir, "ramda.min.js"),
     banner: { js: getLicense("ramda/LICENSE.txt") },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["luxon"],
+  // luxon
+  esbuild.build(withDefaults({
     globalName: "luxon",
+    entryPoints: ["luxon"],
+    outfile: path.join(libDir, "luxon.min.js"),
     banner: { js: getLicense("luxon/LICENSE.md") },
-    footer: { js: "\n;var DateTime=luxon.DateTime" },
+    footer: {
+      js: `
+var DateTime=luxon.DateTime
+var Duration=luxon.Duration
+` },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["validator"],
+  // validator
+  esbuild.build(withDefaults({
     globalName: "validator",
+    entryPoints: ["validator"],
+    outfile: path.join(libDir, "validator.min.js"),
     banner: { js: getLicense("validator/LICENSE") },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["zod"],
+  // zod
+  esbuild.build(withDefaults({
     globalName: "Zod",
+    entryPoints: ["zod"],
+    outfile: path.join(libDir, "zod.min.js"),
     banner: { js: getLicense("zod/LICENSE") },
-    footer: { js: "\n;var z=Zod.z" },
+    footer: {
+      js: `
+var z=Zod.z
+` },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["htmlparser2"],
+  // htmlparser2
+  esbuild.build(withDefaults({
     globalName: "htmlparser2",
+    entryPoints: ["htmlparser2"],
+    outfile: path.join(libDir, "htmlparser2.min.js"),
     banner: { js: getLicense("htmlparser2/LICENSE") },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["css-select"],
+  // css-select
+  esbuild.build(withDefaults({
     globalName: "cssSelect",
+    entryPoints: ["css-select"],
+    outfile: path.join(libDir, "css-select.min.js"),
     banner: { js: getLicense("css-select/LICENSE") },
   })),
-  esbuild.build(bundle({
-    entryPoints: ["flatted"],
+  // flatted
+  esbuild.build(withDefaults({
     globalName: "Flatted",
+    entryPoints: ["flatted"],
+    outfile: path.join(libDir, "flatted.min.js"),
     banner: { js: getLicense("flatted/LICENSE") },
   })),
-])
+  // callsites
+  esbuild.build(withDefaults({
+    globalName: "callsites",
+    entryPoints: ["callsites"],
+    outfile: path.join(libDir, "callsites.min.js"),
+    banner: { js: getLicense("callsites/license") },
+    footer: {
+      js: `
+callsites=callsites.default
+` },
+  })),
+  // node:util (kind-of)
+  esbuild.build(withDefaults({
+    globalName: "util",
+    entryPoints: ["util"],
+    outfile: path.join(libDir, "util.min.js"),
+    banner: { js: getLicense("util/LICENSE") },
+  })),
+  // node:process (shim)
+  esbuild.build(withDefaults({
+    globalName: "process",
+    entryPoints: ["process"],
+    outfile: path.join(libDir, "process.min.js"),
+    banner: { js: getLicense("process/LICENSE") },
+  })),
+  // ms
+  esbuild.build(withDefaults({
+    globalName: "ms",
+    entryPoints: ["ms"],
+    outfile: path.join(libDir, "ms.min.js"),
+    banner: { js: getLicense("ms/license.md") },
+  })),
+]);
 
 /** @param {string} file */
 function getLicense(file) {
   return `/*
 ${fs.readFileSync(path.join("node_modules", file)).toString()}
-*/`.replace(/\n{2,}/g, "\n\n")
+*/`.replace(/\n{2,}/g, "\n\n");
 }
 
-function bundle(/** @type {import("esbuild").BuildOptions} */options) {
-  const pkg = options.entryPoints[0]
-  return _.merge(options, {
+/** @param {import("esbuild").BuildOptions} options */
+function withDefaults(options) {
+  return Object.assign({
     bundle: true,
     minify: true,
     format: "iife",
-    outfile: `build/__dist__/${pkg}.min.js`,
-  })
+  }, options);
 }
