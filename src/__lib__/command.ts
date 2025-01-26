@@ -108,10 +108,10 @@ class Command_<T> {
       }
       else {
         if (message) {
-          ui.alert(message, util.inspect(error), ui.ButtonSet.OK);
+          ui.alert(message, stringify(error), ui.ButtonSet.OK);
         }
         else {
-          ui.alert(util.inspect(error), ui.ButtonSet.OK);
+          ui.alert(stringify(error), ui.ButtonSet.OK);
         }
       }
     }

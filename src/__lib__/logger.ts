@@ -71,7 +71,7 @@ class Logger_ {
     const functionName = _.defaultTo(callSite?.getFunctionName(), "<anonymous>");
     const lineNumber = _.defaultTo(callSite?.getLineNumber(), "?").toString();
     const entryPoint = `${fileName}:${lineNumber} (${functionName})`;
-    const message = args.map(any => typeof any == "string" ? any : util.inspect(any)).join(" ");
+    const message = args.map(any => typeof any == "string" ? any : stringify(any)).join(" ");
     const log: Log = {
       fingerprint: this.fingerprint,
       timestamp: timestamp.toSQL(),

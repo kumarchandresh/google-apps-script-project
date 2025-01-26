@@ -6,7 +6,8 @@
   "license": "MIT",
   "author": "Kumar Chandresh",
   "scripts": {
-    "build": "gulp build"
+    "build": "gulp build",
+    "build:dev": "gulp build --stringify pretty-format"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -28,7 +29,8 @@
     "gulp-typescript": "^6.0.0-alpha.1",
     "json5": "^2.2.3",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.19.0"
+    "typescript-eslint": "^8.19.0",
+    "yargs": "^17.7.2"
   },
   "dependencies": {
     "callsites": "^4.2.0",
@@ -38,6 +40,7 @@
     "lodash": "^4.17.21",
     "luxon": "^3.5.0",
     "ms": "^2.1.3",
+    "pretty-format": "^29.7.0",
     "process": "^0.11.10",
     "ramda": "^0.30.1",
     "util": "^0.12.5",

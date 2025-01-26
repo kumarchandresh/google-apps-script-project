@@ -6,8 +6,8 @@ function myFunction() {
     })();
     (() => {
       const people = [{ name: "Jack" }, { name: "Jill" }];
-      const getNames = fp.pluck("name");
-      const sayHello = fp.map(name => `Hi ${name}`);
+      const getNames = f.pluck("name");
+      const sayHello = f.map(name => `Hi ${name}`);
       logger.log(sayHello(getNames(people)));
     })();
     (() => {
@@ -62,7 +62,7 @@ function myFunction() {
       const a = [{}];
       Object.assign(a[0], { a });
       a.push(a);
-      logger.log(Flatted.stringify(a));
+      logger.log(flatted.stringify(a));
       logger.log(a);
     })();
   })();

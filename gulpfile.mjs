@@ -1,3 +1,4 @@
+/* global process */
 import childProcess from "child_process";
 import * as cspell from "cspell";
 import fs from "fs";
@@ -52,7 +53,7 @@ export async function compile() {
 }
 
 export function bundle(done) {
-  childProcess.spawn("node", ["esbuild.mjs"], { stdio: "inherit" }).on("close", done);
+  childProcess.spawn("node", ["esbuild.mjs"].concat(process.argv.slice(3)), { stdio: "inherit" }).on("close", done);
 }
 
 export function restore() {
