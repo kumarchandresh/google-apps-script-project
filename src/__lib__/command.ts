@@ -1,4 +1,4 @@
-function getUi() {
+const getUi_ = () => {
   try {
     return SpreadsheetApp.getUi();
   }
@@ -16,33 +16,35 @@ function getUi() {
   }
   catch (e) { /* silence */ }
   return null;
-}
+};
+
+type CommandOptions = {
+  name: string;
+  showErrorDialog: boolean;
+  failureMessage: string | ((error: unknown) => string);
+  onStart: () => void;
+  onSuccess: () => void;
+  onFailure: (error: unknown) => void;
+  onEnd: () => void;
+};
 
 class Command_<T> {
   private name: string;
-  private message?: string | ((error: unknown) => string);
-  private noErrorDialog?: boolean;
+  private failureMessage?: string | ((error: unknown) => string);
+  private showErrorDialog?: boolean;
   private _onStart?: () => void;
   private _onSuccess?: () => void;
   private _onFailure?: (error: unknown) => void;
   private _onEnd?: () => void;
-  constructor(private runnable: () => T, options: {
-    readonly name?: string;
-    readonly noErrorDialog?: boolean;
-    readonly message?: string | ((error: unknown) => string);
-    readonly onStart?: () => void;
-    readonly onSuccess?: () => void;
-    readonly onFailure?: (error: unknown) => void;
-    readonly onEnd?: () => void;
-  } = {}) {
+  constructor(private runnable: () => T, options: Partial<CommandOptions> = {}) {
     const callee = callsites().at(0);
     const caller = callsites().at(1);
     if (caller?.getFileName() !== callee?.getFileName()) {
-      throw new Error("Command_ cannot be instantiated");
+      throw new Error("Command_ cannot be instantiated directly; use makeCommand instead.");
     }
     this.name = options.name || this.runnable.name || "<anonymous>";
-    this.noErrorDialog = options.noErrorDialog;
-    this.message = options.message;
+    this.showErrorDialog = options.showErrorDialog;
+    this.failureMessage = options.failureMessage;
     this._onStart = options.onStart;
     this._onSuccess = options.onSuccess;
     this._onFailure = options.onFailure;
@@ -80,7 +82,7 @@ class Command_<T> {
   }
 
   onSuccess() {
-    logger.info(`Command "${this.name}" completed successfully.`);
+    logger.info(`Command "${this.name}" completed successfully (took ${ms(time.elapsed())}).`);
     if (typeof this._onSuccess == "function") {
       this._onSuccess();
     }
@@ -92,26 +94,30 @@ class Command_<T> {
     if (typeof this._onFailure == "function") {
       this._onFailure(error);
     }
-    if (this.noErrorDialog) {
+    if (!this.showErrorDialog) {
       return;
     }
-    const message = typeof this.message == "function" ? this.message(error) : this.message;
-    const ui = getUi();
+    const failureMessage = typeof this.failureMessage == "function"
+      ? this.failureMessage(error)
+      : this.failureMessage;
+    const ui = getUi_();
     if (ui) {
       if (error instanceof Error) {
+        const errorName = error.name ?? error.constructor.name ?? "Error";
+        const errorMessage = errorName + (error.message ? ": " + error.message : "");
         if (error.stack) {
-          ui.alert(message || error.toString(), error.stack, ui.ButtonSet.OK);
+          ui.alert(failureMessage || errorName, toString_(error), ui.ButtonSet.OK);
         }
         else {
-          ui.alert(message || error.toString(), ui.ButtonSet.OK);
+          ui.alert(failureMessage || errorMessage, ui.ButtonSet.OK);
         }
       }
       else {
-        if (message) {
-          ui.alert(message, stringify(error), ui.ButtonSet.OK);
+        if (failureMessage) {
+          ui.alert(failureMessage, toString_(error), ui.ButtonSet.OK);
         }
         else {
-          ui.alert(stringify(error), ui.ButtonSet.OK);
+          ui.alert(toString_(error), ui.ButtonSet.OK);
         }
       }
     }
@@ -125,14 +131,8 @@ class Command_<T> {
   }
 }
 
-function makeCommand<T>(runnable: () => T, options: {
-  readonly name?: string;
-  readonly noErrorDialog?: boolean;
-  readonly message?: string | ((error: unknown) => string);
-  readonly onStart?: () => void;
-  readonly onSuccess?: () => void;
-  readonly onFailure?: (error: unknown) => void;
-  readonly onEnd?: () => void;
-} = {}) {
-  return new Command_(runnable, options).build();
+class Command {
+  static run<T>(runnable: () => T, options: Partial<CommandOptions> = {}) {
+    return new Command_(runnable, options).build().call(null);
+  }
 }

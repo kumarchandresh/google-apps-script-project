@@ -5,19 +5,28 @@ enum LogLevel {
   ERROR = "ERROR",
 }
 
-function getLogLevelOrdinal(level: LogLevel): number {
-  return _.indexOf(_.values(LogLevel), level);
-}
+const getLogLevelOrdinal_ = (level: LogLevel): number => {
+  return _.indexOf(Object.values(LogLevel), level);
+};
 
-const appendGs = R.ifElse<Nullable<string>, Nullable<string>, Nullable<string>, string>(
-  R.isNil,
-  R.identity,
-  R.ifElse(R.endsWith(".gs"), R.identity, R.concat(R.__, ".gs")),
-);
+const appendGs_ = <T>(any: T) => {
+  return typeof any == "string"
+    ? any.endsWith(".gs") ? any : any.concat(".gs")
+    : any;
+};
+
+const toString_ = (any: unknown) => {
+  if (any instanceof Error) {
+    const name = any.name ?? any.constructor.name ?? "Error";
+    return name + (any.message ? ": " + any.message : "")
+      + (any.stack ? "\n" + any.stack.split("\n").filter(line => /^\s*at/.test(line)).join("\n") : "");
+  }
+  return typeof any === "string" ? any : stringify(any);
+};
 
 type LoggerOptions = {
   level: LogLevel;
-  maxRows: number;
+  maxLogs: number;
   useSpreadsheet: boolean | string;
 };
 
@@ -26,7 +35,7 @@ type Log = {
   timestamp: string;
   elapsed: string;
   level: string;
-  entryPoint: string;
+  stacktrace: string;
   message: string;
 };
 
@@ -41,21 +50,21 @@ class Logger_ {
     const callee = callsites().at(0);
     const caller = callsites().at(1);
     if (caller?.getFileName() !== callee?.getFileName()) {
-      throw new Error("Logger_ cannot be instantiated");
+      throw new Error("Logger_ cannot be instantiated directly; use LogManager instead.");
     }
     const config = Object.assign({
-      maxRows: 100_000,
+      maxLogs: 100_000,
       level: LogLevel.INFO,
       useSpreadsheet: false,
     }, options);
     this.level = config.level;
-    this.maxRows = config.maxRows;
+    this.maxRows = Math.max(config.maxLogs, 10);
     this.useSpreadsheet = config.useSpreadsheet;
   }
 
   private logger(level: LogLevel, runnable: () => void) {
-    const srcLevel = getLogLevelOrdinal(level);
-    const dstLevel = getLogLevelOrdinal(this.level);
+    const srcLevel = getLogLevelOrdinal_(level);
+    const dstLevel = getLogLevelOrdinal_(this.level);
     if (srcLevel >= dstLevel) {
       runnable.call(this);
     }
@@ -63,21 +72,18 @@ class Logger_ {
 
   private write(level: LogLevel, ...args: unknown[]) {
     const timestamp = DateTime.now();
-    const callSite = callsites().slice(2).find((site) => {
-      return !site.getFileName()?.startsWith("__lib__/command")
-        && !(site.getFileName()?.startsWith("__lib__/logger") && site.getFunctionName()?.match(/^(log|info|debug|warn|error)$/));
-    }) ?? callsites().at(2);
-    const fileName = _.defaultTo(appendGs(callSite?.getFileName()), "<anonymous>");
+    const callSite = callsites().slice(2).find(it => it.getFileName() != "__lib__/framework") ?? callsites().at(2);
+    const fileName = _.defaultTo(appendGs_(callSite?.getFileName()), "<anonymous>");
     const functionName = _.defaultTo(callSite?.getFunctionName(), "<anonymous>");
     const lineNumber = _.defaultTo(callSite?.getLineNumber(), "?").toString();
-    const entryPoint = `${fileName}:${lineNumber} (${functionName})`;
-    const message = args.map(any => typeof any == "string" ? any : stringify(any)).join(" ");
+    const stackTrace = `${fileName}:${lineNumber} (${functionName})`;
+    const message = args.map(toString_).join(" ");
     const log: Log = {
       fingerprint: this.fingerprint,
       timestamp: timestamp.toSQL(),
-      elapsed: ms(time.elapsed().milliseconds),
+      elapsed: ms(time.elapsed()),
       level: level.toString(),
-      entryPoint,
+      stacktrace: stackTrace,
       message,
     };
     this.logger(level, () => {
@@ -117,89 +123,95 @@ class Logger_ {
   }
 
   flush() {
-    if (this.useSpreadsheet) {
-      const lock = LockService.getScriptLock();
-      const monospaceFont = "Ubuntu Mono";
-      const spreadsheet = _.isString(this.useSpreadsheet)
-        ? SpreadsheetApp.openById(this.useSpreadsheet)
-        : SpreadsheetApp.getActiveSpreadsheet();
-      if (spreadsheet && lock.tryLock(ms("5 minutes"))) {
-        const logs = this.temp.slice();
-        this.temp = []; // Cleared
-        const totalSheets = spreadsheet.getSheets().length;
-        let sheet = spreadsheet.getSheetByName("apps.script.logs");
-        const headers: { [K in keyof Log]: string } = {
-          fingerprint: "Fingerprint",
-          timestamp: "Timestamp",
-          elapsed: "Elapsed",
-          level: "Log level",
-          entryPoint: "Entry point",
-          message: "Message",
-        };
-        const totalColumns = _.keys(headers).length;
+    if (!this.useSpreadsheet) {
+      return;
+    }
+    const lock = LockService.getScriptLock();
+    const monospaceFont = "Ubuntu Mono";
+    const spreadsheet = typeof this.useSpreadsheet == "string"
+      ? SpreadsheetApp.openById(this.useSpreadsheet)
+      : SpreadsheetApp.getActiveSpreadsheet();
+    if (spreadsheet && lock.tryLock(ms("5 minutes"))) {
+      const logs = this.temp.slice();
+      this.temp = []; // Cleared
+      const totalSheets = spreadsheet.getSheets().length;
+      let sheet = spreadsheet.getSheetByName("apps.script.logs");
+      const headers: { [K in keyof Log]: string } = {
+        fingerprint: "Fingerprint",
+        timestamp: "Timestamp",
+        elapsed: "Elapsed",
+        level: "Log level",
+        stacktrace: "Stacktrace",
+        message: "Message",
+      };
+      const totalColumns = Object.keys(headers).length;
+      if (!sheet) {
+        sheet = spreadsheet.insertSheet("apps.script.logs", totalSheets);
+        sheet.getRange(1, 1, 1, totalColumns)
+          .setFontStyle("italic")
+          .setFontFamily(monospaceFont)
+          .mergeAcross();
+        sheet.getRange(1, 1, 1, totalColumns).setValue(["** no previous logs **"]); // For backup link
+        sheet.getRange(2, 1, 1, totalColumns)
+          .setValues([Object.values(headers)])
+          .setFontFamily(monospaceFont)
+          .setFontWeight("bold");
+        sheet.hideColumn(sheet.getRange("A:A"));
+        sheet.setFrozenRows(2);
         if (!sheet) {
-          sheet = spreadsheet.insertSheet("apps.script.logs", totalSheets);
-          sheet.hideSheet();
-          sheet.getRange(1, 1, 1, totalColumns)
-            .setFontStyle("italic")
-            .setFontFamily(monospaceFont)
-            .mergeAcross();
-          sheet.getRange(1, 1, 1, totalColumns).setValue(["** no previous logs **"]); // For backup link
-          sheet.getRange(2, 1, 1, totalColumns)
-            .setValues([_.values(headers)])
-            .setFontFamily(monospaceFont)
-            .setFontWeight("bold");
-          sheet.hideColumn(sheet.getRange("A:A"));
-          sheet.setFrozenRows(2);
-          if (!sheet) {
-            console.error("Unable to create apps.script.logs sheet");
-            return;
-          }
-        }
-        const debugColors = { background: "#F5F5F5", font: "#616161" };
-        const errorColors = { background: "#FFEBEE", font: "#B71C1C" };
-        const warningColors = { background: "#FFF8E1", font: "#A50E0E" };
-        // Write in chunks
-        const chunkSize = 1000;
-        for (const chunk of _.chunk(logs, chunkSize)) {
-          let lastRow = sheet.getLastRow();
-          if (lastRow + chunk.length > this.maxRows + 2) {
-            this.backup(sheet);
-            lastRow = sheet.getLastRow();
-          }
-          sheet.getRange(lastRow + 1, 1, chunk.length, totalColumns)
-            .setFontFamily(monospaceFont)
-            .setNumberFormat("@")
-            .setValues(chunk
-              .map(log => ({ ...log, message: _.truncate(log.message, { length: 50_000 }) }))
-              .map(log => _.values(_.mapValues(headers, (v, k: keyof typeof headers) => log[k]))),
-            );
-          sheet.autoResizeColumns(2, 4);
-          const conditionalFormatRules = sheet.getConditionalFormatRules();
-          conditionalFormatRules[0] = SpreadsheetApp.newConditionalFormatRule()
-            .setRanges([sheet.getRange("A:Z")])
-            .whenFormulaSatisfied('=$D:$D="DEBUG"')
-            .setBackground(debugColors.background)
-            .setFontColor(debugColors.font)
-            .build();
-          conditionalFormatRules[1] = SpreadsheetApp.newConditionalFormatRule()
-            .setRanges([sheet.getRange("A:Z")])
-            .whenFormulaSatisfied('=$D:$D="ERROR"')
-            .setBackground(errorColors.background)
-            .setFontColor(errorColors.font)
-            .build();
-          conditionalFormatRules[2] = SpreadsheetApp.newConditionalFormatRule()
-            .setRanges([sheet.getRange("A:Z")])
-            .whenFormulaSatisfied('=$D:$D="WARNING"')
-            .setBackground(warningColors.background)
-            .setFontColor(warningColors.font)
-            .build();
-          sheet.setConditionalFormatRules(conditionalFormatRules);
-          SpreadsheetApp.flush(); // Flushed
+          console.error("Unable to create apps.script.logs sheet");
+          return;
         }
       }
-      if (lock.hasLock()) lock.releaseLock();
+      const debugColors = { background: "#FFFFFF", font: "#999999" };
+      const errorColors = { background: "#FFEBEE", font: "#B71C1C" };
+      const warningColors = { background: "#FFF8E1", font: "#A50E0E" };
+      const appendLogs = (lastRow: number, logRows: Log[], logSheet: GoogleAppsScript.Spreadsheet.Sheet) => {
+        logSheet.getRange(lastRow + 1, 1, logRows.length, totalColumns)
+          .setFontFamily(monospaceFont)
+          .setNumberFormat("@")
+          .setValues(logRows
+            .map(log => ({ ...log, message: _.truncate(log.message, { length: 50_000 }) }))
+            .map(log => Object.values(_.mapValues(headers, (v, k: keyof typeof headers) => log[k]))),
+          );
+        const conditionalFormatRules = logSheet.getConditionalFormatRules();
+        conditionalFormatRules[0] = SpreadsheetApp.newConditionalFormatRule()
+          .setRanges([logSheet.getRange("A:Z")])
+          .whenFormulaSatisfied('=$D:$D="DEBUG"')
+          .setBackground(debugColors.background)
+          .setFontColor(debugColors.font)
+          .build();
+        conditionalFormatRules[1] = SpreadsheetApp.newConditionalFormatRule()
+          .setRanges([logSheet.getRange("A:Z")])
+          .whenFormulaSatisfied('=$D:$D="ERROR"')
+          .setBackground(errorColors.background)
+          .setFontColor(errorColors.font)
+          .build();
+        conditionalFormatRules[2] = SpreadsheetApp.newConditionalFormatRule()
+          .setRanges([logSheet.getRange("A:Z")])
+          .whenFormulaSatisfied('=$D:$D="WARNING"')
+          .setBackground(warningColors.background)
+          .setFontColor(warningColors.font)
+          .build();
+        logSheet.setConditionalFormatRules(conditionalFormatRules);
+        SpreadsheetApp.flush(); // Flushed
+      };
+      // Write in chunks
+      const chunkSize = 1000;
+      for (let chunk of _.chunk(logs, chunkSize)) {
+        let lastRow = sheet.getLastRow();
+        if (lastRow + chunk.length > (this.maxRows + 2)) {
+          const remainingRows = (this.maxRows + 2) - lastRow;
+          const slice = chunk.slice(0, remainingRows);
+          appendLogs(lastRow, slice, sheet);
+          this.backup(sheet);
+          chunk = chunk.slice(remainingRows);
+          lastRow = sheet.getLastRow();
+        }
+        appendLogs(lastRow, chunk, sheet);
+      }
     }
+    if (lock.hasLock()) lock.releaseLock();
   }
 
   private backup(sheet: GoogleAppsScript.Spreadsheet.Sheet) {

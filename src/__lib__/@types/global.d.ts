@@ -8,6 +8,7 @@ declare global {
   const Duration: typeof import("luxon").Duration;
   const stringify: (any: unknown) => string;
   const callsites: typeof import("node_modules/callsites/index").default;
+  const pretty: typeof import("node_modules/pretty-format/build/index");
   const flatted: typeof import("node_modules/flatted/types/index");
   const zod: typeof import("node_modules/zod/lib/index");
   const z: typeof import("node_modules/zod/lib/index").z;

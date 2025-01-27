@@ -9,6 +9,10 @@ import eslint from "gulp-eslint-new";
 import prettier from "gulp-prettier";
 import typescript from "gulp-typescript";
 import JSON5 from "json5";
+import path from "path";
+import yargs from "yargs";
+
+const srcDir = path.join("src", "__lib__");
 
 export function spellCheck(done) {
   return cspell.lint(["src/**/*.ts", "*.mjs"], {
@@ -46,14 +50,21 @@ export function clean() {
 export async function compile() {
   const buffer = await fs.promises.readFile("tsconfig.json");
   const tsconfig = await JSON5.parse(buffer.toString());
-  return gulp.src(glob.globSync("src/**/*.ts").filter(f => !f.endsWith(".d.ts")))
-    .pipe(esbuild({ target: tsconfig.compilerOptions.target }))
+  return gulp.src(glob.globSync("src/**/*.ts").filter(file => !file.endsWith(".d.ts") && !file.includes(srcDir)))
+    .pipe(esbuild({
+      minifyWhitespace: true,
+      target: tsconfig.compilerOptions.target,
+    }))
     .pipe(prettier({ printWidth: 120 }))
     .pipe(gulp.dest("build"));
 }
 
 export function bundle(done) {
-  childProcess.spawn("node", ["esbuild.mjs"].concat(process.argv.slice(3)), { stdio: "inherit" }).on("close", done);
+  const { argv } = yargs(process.argv.slice(1));
+  const args = Object.entries(argv)
+    .filter(([k]) => !/^(_|\$\d+)$/.test(k))
+    .flatMap(([k, v]) => typeof v == "boolean" ? `--${v ? "" : "no-"}${k}` : [`--${k}`, v]);
+  childProcess.spawn("node", ["esbuild.mjs", ...args], { stdio: "inherit" }).on("close", done);
 }
 
 export function restore() {

@@ -1,153 +1,186 @@
 /* global process */
 import esbuild from "esbuild";
 import fs from "fs";
+import * as glob from "glob";
 import path from "path";
+import * as prettier from "prettier";
 import yargs from "yargs";
 
-const libDir = path.join("build", "__lib__");
+const srcDir = path.join("src", "__lib__");
+const outDir = path.join("build", "__lib__");
+const { argv } = yargs(process.argv.slice(1));
+const all = argv.all ?? false;
 
-const { stringify } = yargs(process.argv.slice(1)).argv;
+const pkgs = {
+  "lodash-fp": all,
+  "ramda": all,
+  "util": true,
+  "pretty-format": all,
+  "flatted": all,
+  "zod": all,
+  "htmlparser2": all,
+  "cssSelect": all,
+  "validator": all,
+  ...argv,
+};
 
-/** @type {((prefix:string) => void)[]} */
-await Promise.all([
+const pkgBuilds = [
+  // Clock goes first
+  esbuild.build({
+    entryPoints: [path.join(srcDir, "stopwatch.ts")],
+    write: false,
+  }),
   // https://www.npmjs.com/package/lodash
   esbuild.build(withDefaults({
     globalName: "_",
     entryPoints: ["lodash"],
-    outfile: path.join(libDir, "lodash.min.js"),
-    banner: { js: getLicense("lodash/LICENSE") },
   })),
+];
+
+if (pkgs["lodash-fp"]) {
   // https://www.npmjs.com/package/lodash
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "f",
     entryPoints: ["lodash/fp"],
-    outfile: path.join(libDir, "lodash-fp.min.js"),
-    banner: { js: getLicense("lodash/LICENSE") },
-  })),
+  })));
+}
+
+if (pkgs.ramda) {
   // https://www.npmjs.com/package/ramda
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "R",
     entryPoints: ["ramda"],
-    outfile: path.join(libDir, "ramda.min.js"),
-    banner: { js: getLicense("ramda/LICENSE.txt") },
-  })),
-  // https://www.npmjs.com/package/ms
-  esbuild.build(withDefaults({
-    globalName: "ms",
-    entryPoints: ["ms"],
-    outfile: path.join(libDir, "ms.min.js"),
-    banner: { js: getLicense("ms/license.md") },
-  })),
-  // https://www.npmjs.com/package/luxon
-  esbuild.build(withDefaults({
-    globalName: "luxon",
-    entryPoints: ["luxon"],
-    outfile: path.join(libDir, "luxon.min.js"),
-    banner: { js: getLicense("luxon/LICENSE.md") },
+  })));
+}
+
+// https://www.npmjs.com/package/ms
+pkgBuilds.push(esbuild.build(withDefaults({
+  globalName: "ms",
+  entryPoints: ["ms"],
+})));
+
+// https://www.npmjs.com/package/luxon
+pkgBuilds.push(esbuild.build(withDefaults({
+  globalName: "luxon",
+  entryPoints: ["luxon"],
+  footer: {
+    js: `
+var DateTime=luxon.DateTime;
+var Duration=luxon.Duration;
+` },
+})));
+
+if (pkgs["pretty-format"] || !pkgs.util) {
+  // https://www.npmjs.com/package/pretty-format
+  pkgBuilds.push(esbuild.build(withDefaults({
+    globalName: "pretty",
+    entryPoints: ["pretty-format"],
     footer: {
       js: `
-var DateTime=luxon.DateTime
-var Duration=luxon.Duration
+var stringify=pretty.format;
 ` },
-  })),
-].concat(/pretty-format/i.test(stringify)
-  // https://www.npmjs.com/package/pretty-format
-  ? esbuild.build(withDefaults({
-      globalName: "prettyFormat",
-      entryPoints: ["pretty-format"],
-      outfile: path.join(libDir, "pretty-format.min.js"),
-      banner: { js: getLicense("pretty-format/LICENSE") },
-      footer: {
-        js: `
-var stringify=prettyFormat.default
+  })));
+}
+
+if (pkgs.util) {
+  // https://www.npmjs.com/package/util
+  pkgBuilds.push(esbuild.build(withDefaults({
+    globalName: "util",
+    entryPoints: ["util"],
+    banner: {
+      // https://www.npmjs.com/package/process
+      js: esbuild.buildSync(withDefaults({
+        write: false,
+        globalName: "process",
+        entryPoints: ["process"],
+      })).outputFiles.map(file => file.text).join("\n"),
+    },
+    footer: {
+      js: `
+var stringify=util.inspect;
 ` },
-    }))
-  // https://www.npmjs.com/package/process
-  : esbuild.build(withDefaults({
-      write: false,
-      globalName: "process",
-      entryPoints: ["process"],
-    })).then((result) => {
-      const content = result.outputFiles.map(f => f.text).join("\n");
-      // https://www.npmjs.com/package/util
-      return esbuild.build(withDefaults({
-        globalName: "util",
-        entryPoints: ["util"],
-        outfile: path.join(libDir, "util.min.js"),
-        banner: {
-          js: getLicense("util/LICENSE") + "\n" + content,
-        },
-        footer: {
-          js: `
-var stringify = util.inspect;
+  })));
+}
+
+// https://www.npmjs.com/package/callsites
+pkgBuilds.push(esbuild.build(withDefaults({
+  globalName: "callsites",
+  entryPoints: ["callsites"],
+  footer: {
+    js: `
+var callsites=callsites.default;
 ` },
-      }));
-    }),
-).concat([
+})));
+
+if (pkgs.flatted) {
   // https://www.npmjs.com/package/flatted
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "flatted",
     entryPoints: ["flatted"],
-    outfile: path.join(libDir, "flatted.min.js"),
-    banner: { js: getLicense("flatted/LICENSE") },
-  })),
-  // https://www.npmjs.com/package/callsites
-  esbuild.build(withDefaults({
-    globalName: "callsites",
-    entryPoints: ["callsites"],
-    outfile: path.join(libDir, "callsites.min.js"),
-    banner: { js: getLicense("callsites/license") },
-    footer: {
-      js: `
-var callsites=callsites.default
-` },
-  })),
+  })));
+}
+
+if (pkgs.zod) {
   // https://www.npmjs.com/package/zod
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "zod",
     entryPoints: ["zod"],
-    outfile: path.join(libDir, "zod.min.js"),
-    banner: { js: getLicense("zod/LICENSE") },
     footer: {
       js: `
-var z=zod.z
-` },
-  })),
+  var z=zod.z;
+  ` },
+  })));
+}
+
+if (pkgs.htmlparser2) {
   // https://www.npmjs.com/package/htmlparser2
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "htmlparser2",
     entryPoints: ["htmlparser2"],
-    outfile: path.join(libDir, "htmlparser2.min.js"),
-    banner: { js: getLicense("htmlparser2/LICENSE") },
-  })),
+  })));
+}
+
+if (pkgs.cssSelect) {
   // https://www.npmjs.com/package/css-select
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "cssSelect",
     entryPoints: ["css-select"],
-    outfile: path.join(libDir, "css-select.min.js"),
-    banner: { js: getLicense("css-select/LICENSE") },
-  })),
+  })));
+}
+
+if (pkgs.validator) {
   // https://www.npmjs.com/package/validator
-  esbuild.build(withDefaults({
+  pkgBuilds.push(esbuild.build(withDefaults({
     globalName: "validator",
     entryPoints: ["validator"],
-    outfile: path.join(libDir, "validator.min.js"),
-    banner: { js: getLicense("validator/LICENSE") },
-  })),
-]));
-
-/** @param {string} file */
-function getLicense(file) {
-  return `/*
-${fs.readFileSync(path.join("node_modules", file)).toString()}
-*/`.replace(/\n{2,}/g, "\n\n");
+  })));
 }
+
+const libBuild = await esbuild.build({
+  entryPoints: glob.globSync("src/**/*.ts")
+    .filter(file => !file.endsWith(".d.ts"))
+    .filter(file => file.includes(srcDir) && !file.includes(path.join(srcDir, "stopwatch.ts"))),
+  outdir: ".tmp",
+  write: false,
+});
 
 /** @param {import("esbuild").BuildOptions} options */
 function withDefaults(options) {
   return Object.assign({
+    write: false,
     bundle: true,
     minify: true,
     format: "iife",
   }, options);
 }
+
+const pkgBuild = await Promise.all(pkgBuilds);
+const pkgContents = pkgBuild.map(result => result.outputFiles.map(f => f.text).join("\n")).join("\n");
+const libContents = await prettier.format(libBuild.outputFiles.map(f => f.text).join("\n"), {
+  parser: "babel",
+  printWidth: 120,
+});
+
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(path.join(outDir, "bundle.min.js"), pkgContents, { encoding: "utf8" });
+fs.writeFileSync(path.join(outDir, "framework.js"), libContents, { encoding: "utf8" });
