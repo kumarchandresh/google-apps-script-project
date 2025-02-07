@@ -66,6 +66,20 @@ function myFunction() {
       logger.log(flatted.stringify(a));
       logger.log(a);
     })();
+    (() => {
+      const str = "   A  quick   brown fox jumps  over     the lazy dog.   ";
+      logger.log(StringUtil.normalizeSpaces(str));
+      logger.log(StringUtil.normalizeWith(R.toLower)(str));
+      logger.log(StringUtil.normalizeWith(R.toUpper)(str));
+      logger.log(StringUtil.isBlanks(str), StringUtil.isBlanks(""));
+      logger.log(StringUtil.isNotBlanks(str), StringUtil.isNotBlanks(""));
+      logger.log(StringUtil.equalsIgnoreCase(" AbC", "aBc "), StringUtil.equalsIgnoreCase(" AbC", "xYz "));
+      logger.log(
+        StringUtil.matchesIgnoreCase(" cooler ", "cool"),
+        StringUtil.matchesIgnoreCase("lemon ", " lemonade"),
+        StringUtil.matchesIgnoreCase("alpha", "beta"),
+      );
+    })();
     z.string().parse(0);
   }, {
     showErrorDialog: true,
